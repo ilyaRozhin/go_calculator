@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +17,31 @@ func bracketRules(brackets *string) string {
 		return *brackets
 	}
 	return bracketRules(brackets)
+}
+
+// checkNums - функция проверки корректности чисел
+func checkNums(line *string) (bool, string) {
+	numsSep := "*+-^:/)("
+	errorMessage := "error: mistakes in writing numbers -> "
+	var errFlag = false
+	var resultLine string
+	for _, value := range *line {
+		if (value <= '9' && value >= '0') || value == '.' || value == ',' || (value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') {
+			resultLine += string(value)
+		} else if strings.ContainsRune(numsSep, value) {
+			if len(resultLine) != 0 {
+				if _, err := strconv.Atoi(resultLine); err != nil {
+					errorMessage += resultLine + " "
+					errFlag = true
+				}
+				resultLine = ""
+			}
+		}
+	}
+	if errFlag {
+		return false, errorMessage
+	}
+	return true, "Successful"
 }
 
 // checkBracket - функция проверки скобок
@@ -40,9 +68,18 @@ func checkBracket(line *string) (bool, string) {
 
 // checkExample - функция проверки на соблюдения всех правил ввода мат. выражений
 func checkExample(line *string) (bool, string) {
+	var withoutSpace string
+	for _, value := range *line {
+		if value != ' ' {
+			withoutSpace += string(value)
+		}
+	}
+	*line = withoutSpace
 	if *line == "" {
 		return false, "error: line is empty"
-	} else if ansBool, ansString := checkBracket(line); ansBool == false {
+	} else if bracketBool, bracketString := checkBracket(line); bracketBool == false {
+		return false, bracketString
+	} else if ansBool, ansString := checkNums(line); ansBool == false {
 		return false, ansString
 	}
 	return true, "" // ???
@@ -51,9 +88,11 @@ func checkExample(line *string) (bool, string) {
 // menu - основное меню приложения
 func menu() {
 	var example string
+	var scanner = bufio.NewScanner(os.Stdin)
 	fmt.Println("Please enter a new example:")
-	_, err := fmt.Scan(&example)
-	if err != nil {
+	scanner.Scan()
+	example = scanner.Text()
+	if err := scanner.Err(); err != nil {
 		fmt.Println("Scan error,please repeat input!")
 	} else if ansBool, ansString := checkExample(&example); ansBool == false {
 		fmt.Println(ansString)
