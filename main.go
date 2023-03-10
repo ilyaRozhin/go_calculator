@@ -8,6 +8,48 @@ import (
 	"strings"
 )
 
+// operation - структура для хранения бинарной операции
+type operation struct {
+	firstNum  float64
+	secondNum float64
+	operation string
+}
+
+// initOperation - функция иницицализация нового экземпляра operation
+func initOperation(line *string, w *operation) {
+	numSep := "*+-^:/"
+	var numberBuffer = ""
+	for _, value := range *line {
+		if strings.ContainsRune(numSep, value) {
+			w.operation = string(value)
+			w.firstNum, _ = strconv.ParseFloat(numberBuffer, 64) // Error strconv
+			numberBuffer = ""
+		} else if value == ')' {
+			w.secondNum, _ = strconv.ParseFloat(numberBuffer, 64)
+		} else if value >= '0' && value <= '9' || value == ',' || value == '.' {
+			numberBuffer += string(value)
+		}
+	}
+}
+
+// calcFunc - расчет значения экземпляра operation
+func (w operation) calcFunc() float64 {
+	var result float64
+	switch w.operation {
+	case "+":
+		result = w.firstNum + w.secondNum
+	case "-":
+		result = w.firstNum - w.secondNum
+	case "*":
+		result = w.firstNum * w.secondNum
+	case "/":
+		result = w.firstNum / w.secondNum
+	default:
+		result = w.firstNum * w.secondNum
+	}
+	return result
+}
+
 // bracketRules - соблюдение правил расстановки скобок
 func bracketRules(brackets *string) string {
 	buffer := "()"
@@ -19,18 +61,18 @@ func bracketRules(brackets *string) string {
 	return bracketRules(brackets)
 }
 
-// checkNums - функция проверки корректности чисел
-func checkNums(line *string) (bool, string) {
-	numsSep := "*+-^:/)("
+// checkNum - функция проверки корректности чисел
+func checkNum(line *string) (bool, string) {
+	numSep := "*+-^:/)("
 	errorMessage := "error: mistakes in writing numbers -> "
 	var errFlag = false
 	var resultLine string
 	for _, value := range *line {
-		if (value <= '9' && value >= '0') || value == '.' || value == ',' || (value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') {
+		if (value <= '9' && value >= '0') || value == '.' || value == ',' { //|| (value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') {
 			resultLine += string(value)
-		} else if strings.ContainsRune(numsSep, value) {
+		} else if strings.ContainsRune(numSep, value) {
 			if len(resultLine) != 0 {
-				if _, err := strconv.Atoi(resultLine); err != nil {
+				if _, err := strconv.ParseFloat(resultLine, 64); err != nil {
 					errorMessage += resultLine + " "
 					errFlag = true
 				}
@@ -79,7 +121,7 @@ func checkExample(line *string) (bool, string) {
 		return false, "error: line is empty"
 	} else if bracketBool, bracketString := checkBracket(line); bracketBool == false {
 		return false, bracketString
-	} else if ansBool, ansString := checkNums(line); ansBool == false {
+	} else if ansBool, ansString := checkNum(line); ansBool == false {
 		return false, ansString
 	}
 	return true, "" // ???
