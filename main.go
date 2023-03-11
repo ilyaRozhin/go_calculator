@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -10,44 +11,91 @@ import (
 
 // operation - структура для хранения бинарной операции
 type operation struct {
-	firstNum  float64
-	secondNum float64
-	operation string
+	numSlice  []float64
+	statement []string
+	result    float64
 }
 
-// initOperation - функция иницицализация нового экземпляра operation
+type expression struct {
+	strExpression string
+}
+
+// initOperation - функция иницицализации нового экземпляра operation
 func initOperation(line *string, w *operation) {
 	numSep := "*+-^:/"
 	var numberBuffer = ""
-	for _, value := range *line {
+	var floatBuffer float64
+	for index, value := range *line {
 		if strings.ContainsRune(numSep, value) {
-			w.operation = string(value)
-			w.firstNum, _ = strconv.ParseFloat(numberBuffer, 64) // Error strconv
+			w.statement = append(w.statement, string(value))
+			floatBuffer, _ = strconv.ParseFloat(numberBuffer, 64) // Error strconv
+			w.numSlice = append(w.numSlice, floatBuffer)
 			numberBuffer = ""
-		} else if value == ')' {
-			w.secondNum, _ = strconv.ParseFloat(numberBuffer, 64)
+		} else if index == (len(*line) - 1) {
+			numberBuffer += string(value)
+			floatBuffer, _ = strconv.ParseFloat(numberBuffer, 64)
+			w.numSlice = append(w.numSlice, floatBuffer)
 		} else if value >= '0' && value <= '9' || value == ',' || value == '.' {
 			numberBuffer += string(value)
 		}
 	}
 }
 
-// calcFunc - расчет значения экземпляра operation
-func (w operation) calcFunc() float64 {
+func resultCalc(numOp string, w *operation) bool {
 	var result float64
-	switch w.operation {
-	case "+":
-		result = w.firstNum + w.secondNum
-	case "-":
-		result = w.firstNum - w.secondNum
-	case "*":
-		result = w.firstNum * w.secondNum
-	case "/":
-		result = w.firstNum / w.secondNum
-	default:
-		result = w.firstNum * w.secondNum
+	var bufferSlice []float64
+	var indexesStatement []int
+	var bufferIndex int
+	var firstNum, secondNum float64
+	for index, value := range w.statement {
+		if numOp == value {
+			indexesStatement = append(indexesStatement, index)
+		}
 	}
-	return result
+	for i := len(indexesStatement) - 1; i >= 0; i-- {
+		bufferIndex = indexesStatement[i]
+		firstNum = w.numSlice[bufferIndex]
+		secondNum = w.numSlice[bufferIndex+1]
+		switch numOp {
+		case "+":
+			result = firstNum + secondNum
+		case "-":
+			result = firstNum - secondNum
+		case "*":
+			result = firstNum * secondNum
+		case "/", ":":
+			result = firstNum / secondNum
+		case "^":
+			result = math.Pow(firstNum, secondNum)
+		default:
+			result = firstNum * secondNum
+		}
+		bufferSlice = w.numSlice
+		if len(bufferSlice) == 2 {
+			w.result = result
+			fmt.Println(w.numSlice)
+			fmt.Println(w.statement)
+			fmt.Println(w.result)
+			return true
+		} else {
+			w.numSlice = append(w.numSlice[:bufferIndex], result)
+			if len(bufferSlice) > bufferIndex+2 {
+				w.numSlice = append(w.numSlice, bufferSlice[bufferIndex+2:]...)
+			}
+			w.statement = append(w.statement[:bufferIndex], w.statement[bufferIndex+1:]...)
+		}
+	}
+	return false
+}
+
+// calcFunc - расчет значения экземпляра operation
+func calcFunc(w *operation) {
+	statementStr := "^*:/+-"
+	for _, value := range statementStr {
+		if resultCalc(string(value), w) {
+			break
+		}
+	}
 }
 
 // bracketRules - соблюдение правил расстановки скобок
@@ -146,4 +194,9 @@ func menu() {
 
 func main() {
 	menu()
+	//strExp := "1*2+3*4+6*5+19/32+643*0.2213"
+	//var exp1 operation
+	//initOperation(&strExp, &exp1)
+	//calcFunc(&exp1)
+	//fmt.Println(exp1.result)
 }
