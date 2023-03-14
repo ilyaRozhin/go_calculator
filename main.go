@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	Expr "go_calculator/src/expression_in"
+	"go_calculator/src/bracket_expression"
 	Check "go_calculator/src/full_check"
 	"os"
 )
@@ -28,10 +28,12 @@ func menu() {
 func main() {
 	//menu()
 	//strExp := "1*2+3*4+6*5+19/32+643*0.1212"
-	strExp := "1*2+3*4+6*5"
-	var exp1 Expr.Expression
-	exp1 = exp1.InitExpression(&strExp)
-	result := exp1.CalcFunc()
-	fmt.Println(result)
-	exp1.SeeAllInf()
+	strExp := "14+15*((1*2)+(3*4))/(6*5)+15+4*((1/2)*(4+8))" //*9+(7+2)*3)"
+	strExp = bracket_expression.CalcFullExp(&strExp)
+	fmt.Println(strExp)
+	//var exp1 Expr.Expression
+	//exp1 = exp1.InitExpression(&strExp)
+	//result := exp1.CalcFunc()
+	//fmt.Println(result)
+	//exp1.SeeAllInf()
 }

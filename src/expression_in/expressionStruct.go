@@ -7,17 +7,21 @@ import (
 	"strings"
 )
 
-// Expression - структура для выражения в скобках
+// Expression - структура для арифметического выражения
 type Expression struct {
 	numSlice  []float64
 	statement []string
 }
 
-// InitExpression - функция иницицализации нового экземпляра expression
-func (w Expression) InitExpression(line *string) Expression {
+// InitExpression - функция иницицализации нового экземпляра Expression
+func InitExpression(line *string, w *Expression) Expression {
+
+	clearExpression(w)
+
 	numSep := "*+-^:/"
 	var numberBuffer = ""
 	var floatBuffer float64
+
 	for index, value := range *line {
 		if strings.ContainsRune(numSep, value) {
 			w.statement = append(w.statement, string(value))
@@ -32,16 +36,25 @@ func (w Expression) InitExpression(line *string) Expression {
 			numberBuffer += string(value)
 		}
 	}
-	return w
+	return *w
 }
 
+// clearExpression - функция для очистки эксземпляра структуры Expression
+func clearExpression(w *Expression) {
+	w.numSlice = []float64{}
+	w.statement = []string{}
+}
+
+// SeeAllInf - мето для проверки существующих данных
+// внутри экзмпляра структуры Expression
 func (w Expression) SeeAllInf() {
 	fmt.Println("NumSlice:", w.numSlice)
 	fmt.Println("Statements:", w.statement)
 	//fmt.Println("Result:", w.result)
 }
 
-func copy(w Expression) Expression {
+// copyExp, дает возможность копировать элементы Expression
+func copyExp(w Expression) Expression {
 	var newCopy Expression
 	newCopy.numSlice = w.numSlice
 	newCopy.statement = w.statement
@@ -49,10 +62,10 @@ func copy(w Expression) Expression {
 	return newCopy
 }
 
-// CalcFunc - расчет значения экземпляра operation
+// CalcFunc - расчет значения Expression
 func (w Expression) CalcFunc() float64 {
 	statementStr := "^*:/+-"
-	buffer := copy(w)
+	buffer := copyExp(w)
 	for _, value := range statementStr {
 		if ans, result := resultCalc(string(value), &buffer); ans == true {
 			return result
@@ -61,6 +74,7 @@ func (w Expression) CalcFunc() float64 {
 	return 0 // Реализовать ошибку
 }
 
+// resultCalc, позволяет расчитать результат арифметического выражения
 func resultCalc(numOp string, w *Expression) (bool, float64) {
 	var result float64
 	var bufferSlice []float64
